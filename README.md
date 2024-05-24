@@ -1,10 +1,8 @@
-[English](#baidu-serp-api) | [中文](#百度serp-api-1)
+[English](#baidu-serp-api) | [中文](#百度SERP-API)
 
 # Baidu SERP API
 
 A Python library to extract data from Baidu Search Engine Results Pages (SERP) and output it as JSON objects.
-
-[English](#baidu-serp-api) | [中文](#百度SERP-API)
 
 ## Installation
 
