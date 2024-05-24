@@ -64,7 +64,7 @@ results = pc_serp.search('关键词', date_range='20240501,20240531', pn='2', pr
 print(results)
 
 m_serp = BaiduMobile()
-results = m_serp.search('关键词', date_range='day', pn='2', proxies={'http': 'http://你的代理服务器:端口'})
+results = m_serp.search('关键词', date_range='20240501,20240531', pn='2', proxies={'http': 'http://你的代理服务器:端口'})
 print(results)
 ```
 
