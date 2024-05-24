@@ -41,6 +41,8 @@ print(results)
     - `recommend` recommend keywords.
     - `last_page` indicates whether it's the last page.
 
+### Disclaimer
+This project is intended for educational purposes only and must not be used for commercial purposes or for large-scale scraping of Baidu data. This project is licensed under the GPLv3 open-source license. If other projects utilize the content of this project, they must be open-sourced and acknowledge the source. Additionally, the author of this project shall not be held responsible for any legal risks resulting from misuse. Violators will bear the consequences at their own risk.
 
 
 
@@ -84,3 +86,7 @@ print(results)
     - `results` 搜索结果列表。
     - `recommend` 推荐相关搜索词。
     - `last_page` 表示是否为最后一页。
+
+### 免责声明
+
+本项目仅供学习之用，不可用于商业目的或大规模爬取百度数据。本项目采用GPLv3开源许可，若涉及到其他项目使用本项目内容，需开源并注明来源。同时，本项目作者不对滥用行为可能导致的法律风险承担责任，违者自负后果。
