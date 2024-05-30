@@ -25,7 +25,7 @@ class BaiduMobile:
             description = ""
             date_time = ""
 
-            summary_element = result.find('div', {'data-module': 'summary'})
+            summary_element = result.find('div', class_=lambda x: x and 'summary-' in x)
             if summary_element:
                 description = clean_html_tags(summary_element.get_text().strip())
 
