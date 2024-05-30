@@ -23,6 +23,7 @@ class BaiduPc:
 
             description = ""
             date_time = ""
+            source = ""
 
             summary_element = result.select_one('span[class^="content-right_"]')
             if summary_element:
@@ -32,9 +33,13 @@ class BaiduPc:
             if date_time_element:
                 date_time = date_time_element.get_text().strip()
 
+            source_element = result.select_one('span.c-color-gray')
+            if source_element:
+                source = source_element.get_text().strip()
+
             if title_element and url:
                 title_text = clean_html_tags(title_element.get_text().strip())
-                result_data.append({"title": title_text, "url": url, "description": description, "date_time": date_time})
+                result_data.append({"title": title_text, "url": url, "description": description, "date_time": date_time, "source": source})
 
         return result_data
 

@@ -24,8 +24,10 @@ class BaiduMobile:
 
             description = ""
             date_time = ""
+            source = ""
 
             summary_element = result.find('div', class_=lambda x: x and 'summary-' in x)
+
             if summary_element:
                 description = clean_html_tags(summary_element.get_text().strip())
 
@@ -33,10 +35,13 @@ class BaiduMobile:
                 if date_time_element:
                     description = description.replace(date_time_element.get_text().strip(), '')
                     date_time = date_time_element.get_text().strip()
+            source_element = result.find('div', class_=lambda x: x and '_text_' in x)
+            if source_element:
+                source = source_element.get_text().strip()
 
             if title_element and url:
                 title_text = clean_html_tags(title_element.get_text().strip())
-                search_data.append({'title': title_text, 'url': url, 'description': description, 'date_time': date_time})
+                search_data.append({'title': title_text, 'url': url, 'description': description, 'date_time': date_time, "source": source})
 
         return search_data
 
