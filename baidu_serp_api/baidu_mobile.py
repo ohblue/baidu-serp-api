@@ -14,7 +14,7 @@ class BaiduMobile:
     def extract_baidum_data(self, html_content):
         search_data = []
         soup = BeautifulSoup(html_content, 'html.parser')
-        search_results = soup.find_all(class_='c-result result')
+        search_results = soup.select('div[tpl="www_index"]')
         for result in search_results:
             title_element = result.find('p', class_='cu-title')
 
@@ -26,8 +26,7 @@ class BaiduMobile:
             date_time = ""
             source = ""
 
-            summary_element = result.find('div', class_=lambda x: x and 'summary-' in x)
-
+            summary_element = result.select_one('div[class*=summary-]')
             if summary_element:
                 description = clean_html_tags(summary_element.get_text().strip())
 
@@ -35,7 +34,8 @@ class BaiduMobile:
                 if date_time_element:
                     description = description.replace(date_time_element.get_text().strip(), '')
                     date_time = date_time_element.get_text().strip()
-            source_element = result.find('div', class_=lambda x: x and '_text_' in x)
+
+            source_element = result.select_one('div[class*=_text_]')
             if source_element:
                 source = source_element.get_text().strip()
 
@@ -74,16 +74,18 @@ class BaiduMobile:
             # 获取所有键名为'up'和'down'的值
             up_values = []
             down_values = []
-            for item in json_data['rs']['rcmd']['list']:
-                up_values.extend(item['up'])
-                down_values.extend(item['down'])
+            if json_data['errcode'] != 0:
+                return []
+            else: 
+                for item in json_data['rs']['rcmd']['list']:
+                    up_values.extend(item['up'])
+                    down_values.extend(item['down'])
 
-            # 排重并合并为新的列表
-            recomment_list = list(set(up_values + down_values))
-            logger.debug(len(recomment_list))
-            return recomment_list
+                # 排重并合并为新的列表
+                recomment_list = list(set(up_values + down_values))
+                return recomment_list
         except requests.exceptions.RequestException as e:
-            return {'code': 500, 'msg': '网络请求错误'}
+            return []
 
     def get_baidum_serp(self, keyword, date_range=None, pn=None, proxies=None):
         url = 'https://m.baidu.com/s'
@@ -113,8 +115,7 @@ class BaiduMobile:
             response.encoding = 'utf-8'
             return response.text
         except requests.exceptions.RequestException as e:
-            logger.error(f'{keyword}相关搜索词获取失败')
-            return []
+            return {'code': 500, 'msg': '网络请求失败'}
 
     def handle_response(self, response):
         if isinstance(response, str):
