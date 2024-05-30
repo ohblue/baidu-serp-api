@@ -8,7 +8,9 @@ import re
 
 class BaiduPc:
 
-    random_params = gen_random_params()
+    def __init__(self):
+        self.random_params = gen_random_params()
+        self.keyword = None
 
     def extract_baidupc_data(self, html_content):
         soup = BeautifulSoup(html_content, 'html.parser')
@@ -138,24 +140,25 @@ class BaiduPc:
             response.encoding = 'utf-8'
             return response.text
         except requests.exceptions.RequestException as e:
-            return {'code': 40000, 'msg': '网络请求失败'}
+            return {'code': 500, 'msg': '网络请求失败'}
 
     def handle_response(self, response):
         if isinstance(response, str):
             if '百度安全验证' in response or response.strip() == '':
-                return {'code': 40001, 'msg': '百度安全验证'}
+                return {'code': 501, 'msg': '百度安全验证'}
             elif '未找到相关结果' in response:
-                return {'code': 40002, 'msg': '未找到相关结果'}
-            # elif '相关搜索' not in response:
-            #     return {'code': 40003, 'msg': '疑似违禁词'}
+                return {'code': 404, 'msg': '未找到相关结果'}
+            elif '相关搜索' not in response and 'site:' not in self.keyword:
+                return {'code': 403, 'msg': '疑似违禁词'}
             else:
                 search_results = self.extract_baidupc_data(response)
                 recomment_list = self.get_recommend(response)
                 last_page = '下一页' not in response
-                return {'code': 20000, 'msg': 'ok', 'data': {'results': search_results, 'recommend':recomment_list, 'last_page': last_page}}
+                return {'code': 200, 'msg': 'ok', 'data': {'results': search_results, 'recommend':recomment_list, 'last_page': last_page}}
         else:
             return response
 
     def search(self, keyword, date_range=None, pn=None, proxies=None):
+        self.keyword = keyword
         html_content = self.get_baidupc_serp(keyword, date_range, pn, proxies)
         return self.handle_response(html_content)

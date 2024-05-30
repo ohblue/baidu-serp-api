@@ -33,10 +33,11 @@ print(results)
 
 ### Return Values
 
-- `{'code': 40001, 'msg': '百度安全验证'}`: Baidu security verification required.
-- `{'code': 40002, 'msg': '未找到相关结果'}`: No relevant results found.
-- `{'code': 40003, 'msg': '疑似违禁词'}`: Suspected prohibited word.
-- `{'code': 20000, 'msg': 'ok', 'data': {'results': [], 'recommend': [], last_page': True}}`: Successful response. 
+- `{'code': 500, 'msg': '网络请求错误'}`: Network request exception.
+- `{'code': 501, 'msg': '百度安全验证'}`: Baidu security verification required.
+- `{'code': 404, 'msg': '未找到相关结果'}`: No relevant results found.
+- `{'code': 403, 'msg': '疑似违禁词'}`: Suspected prohibited word.
+- `{'code': 200, 'msg': 'ok', 'data': {'results': [], 'recommend': [], last_page': True}}`: Successful response. 
     - `results` search results list.
     - `recommend` recommend keywords.
     - `last_page` indicates whether it's the last page.
@@ -79,10 +80,11 @@ print(results)
 
 ### 返回值
 
-- `{'code': 40001, 'msg': '百度安全验证'}`: 需要进行百度安全验证。
-- `{'code': 40002, 'msg': '未找到相关结果'}`: 未找到相关结果。
-- `{'code': 40003, 'msg': '疑似违禁词'}`: 疑似违禁词。
-- `{'code': 20000, 'msg': 'ok', 'data': {'results': [], 'last_page': True}}`: 成功响应。
+- `{'code': 500, 'msg': '网络请求错误'}`: 网络请求失败需要重试。
+- `{'code': 502, 'msg': '百度安全验证'}`: 需要进行百度安全验证。
+- `{'code': 404, 'msg': '未找到相关结果'}`: 未找到相关结果。
+- `{'code': 403, 'msg': '疑似违禁词'}`: 疑似违禁词。
+- `{'code': 200, 'msg': 'ok', 'data': {'results': [], 'last_page': True}}`: 成功响应。
     - `results` 搜索结果列表。
     - `recommend` 推荐相关搜索词。
     - `last_page` 表示是否为最后一页。

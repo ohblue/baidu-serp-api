@@ -6,8 +6,10 @@ from .util import gen_random_params, clean_html_tags, logger
 
 class BaiduMobile:
     
-    random_params = gen_random_params()
-    recomment_list = []
+    def __init__(self):
+        self.random_params = gen_random_params()
+        self.keyword = None
+        self.recomment_list = []
 
     def extract_baidum_data(self, html_content):
         search_data = []
@@ -76,7 +78,7 @@ class BaiduMobile:
             logger.debug(len(recomment_list))
             return recomment_list
         except requests.exceptions.RequestException as e:
-            return {'code': 40000, 'msg': '网络请求错误'}
+            return {'code': 500, 'msg': '网络请求错误'}
 
     def get_baidum_serp(self, keyword, date_range=None, pn=None, proxies=None):
         url = 'https://m.baidu.com/s'
@@ -112,18 +114,16 @@ class BaiduMobile:
     def handle_response(self, response):
         if isinstance(response, str):
             if '百度安全验证' in response:
-                return {'code': 40001, 'msg': '百度安全验证'}
+                return {'code': 501, 'msg': '百度安全验证'}
             elif '未找到相关结果' in response:
-                return {'code': 40002, 'msg': '未找到相关结果'}
+                return {'code': 404, 'msg': '未找到相关结果'}
             else:
                 soup = BeautifulSoup(response, 'html.parser')
                 if not soup.find('p', class_='cu-title'):
-                    with open('tmp.html', 'w') as f:
-                        f.write(response)
-                    return {'code': 40003, 'msg': '疑似违禁词'}
+                    return {'code': 403, 'msg': '疑似违禁词'}
                 search_results = self.extract_baidum_data(response)
                 last_page = 'new-nextpage' not in response
-                return {'code': 20000, 'msg': 'ok', 'data': {'results': search_results, 'recomment': self.recomment_list, 'last_page': last_page}}
+                return {'code': 200, 'msg': 'ok', 'data': {'results': search_results, 'recomment': self.recomment_list, 'last_page': last_page}}
         else:
             return response
 
