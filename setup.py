@@ -1,16 +1,8 @@
 from setuptools import setup, find_packages
 
-def get_version():
-    try:
-        from subprocess import check_output
-        version = check_output(['git', 'describe', '--tags']).decode().strip()
-        return version
-    except Exception as e:
-        print("Error getting version from Git tags:", e)
-        return '0.1' 
 setup(
     name='baidu-serp-api',
-    version=get_version(),
+    version='0.2',
     packages=find_packages(),
     install_requires=[
         'requests',
@@ -28,7 +20,7 @@ setup(
     url='https://github.com/ohblue/baidu-serp-api',
     classifiers=[
         'Programming Language :: Python :: 3',
-        'License :: OSI Approved :: MIT License',
+        'License :: OSI Approved :: GNU General Public License v3 (GPLv3)',
         'Operating System :: OS Independent',
     ],
     python_requires='>=3.6',
