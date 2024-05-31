@@ -105,14 +105,22 @@ class BaiduMobile:
         }
         try:
             response = requests.get(url, headers=headers, params=params, proxies=proxies, timeout=10)
+            response.raise_for_status()
+            response.encoding = 'utf-8'
+
             # 如果没有传页码或者是第1页则获取相关搜索词
             if pn is None or pn==1:
                 res_headers = response.headers
                 if 'qid' in res_headers:
                     qid = res_headers['qid']
                 self.recomment_list = self.get_recommend(keyword, qid=qid, proxies=proxies)
-            response.raise_for_status()
-            response.encoding = 'utf-8'
+
+                soup = BeautifulSoup(response.text, 'html.parser')
+                page_rcmd = [elem.get_text() for elem in soup.select('a.c-fwb, span.c-fwb')]
+                
+                # 合并并排重
+                self.recomment_list = list(set(self.recomment_list + page_rcmd))
+
             return response.text
         except requests.exceptions.RequestException as e:
             return {'code': 500, 'msg': '网络请求失败'}
