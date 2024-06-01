@@ -1,7 +1,6 @@
 import requests
 from bs4 import BeautifulSoup
 import json
-from urllib.parse import quote
 from datetime import datetime
 from .util import gen_random_params, clean_html_tags, logger
 import re
@@ -11,6 +10,9 @@ class BaiduPc:
     def __init__(self):
         self.random_params = gen_random_params()
         self.keyword = None
+        self.date_range = None
+        self.pn = None
+        self.proxies = None
 
     def extract_baidupc_data(self, html_content):
         soup = BeautifulSoup(html_content, 'html.parser')
@@ -24,6 +26,8 @@ class BaiduPc:
             description = ""
             date_time = ""
             source = ""
+
+            ranking = result.get('id', 0)
 
             summary_element = result.select_one('span[class^="content-right_"]')
             if summary_element:
@@ -39,7 +43,7 @@ class BaiduPc:
 
             if title_element and url:
                 title_text = clean_html_tags(title_element.get_text().strip())
-                result_data.append({"title": title_text, "url": url, "description": description, "date_time": date_time, "source": source})
+                result_data.append({"title": title_text, "url": url, "description": description, "date_time": date_time, "source": source, "ranking": ranking})
 
         return result_data
 
@@ -66,7 +70,7 @@ class BaiduPc:
         recomment_list = list(keyword_set)
         return recomment_list
 
-    def get_baidupc_serp(self, keyword, date_range=None, pn=None, proxies=None):
+    def get_baidupc_serp(self, keyword):
         url = 'http://www.baidu.com/s'
 
         params = {
@@ -105,16 +109,15 @@ class BaiduPc:
             params['ct'] = '2097152'
 
         # 搜索指定日期范围
-        if date_range:
-            start_date, end_date = date_range.split(',')
+        if self.date_range:
+            start_date, end_date = self.date_range.split(',')
             start_timestamp = int(datetime.strptime(start_date, '%Y%m%d').timestamp())
             end_timestamp = int(datetime.strptime(end_date, '%Y%m%d').timestamp())
-            # params['gpc'] = quote(f'stf={start_timestamp},{end_timestamp}|stftype=2')
             params['gpc'] = f'stf={start_timestamp},{end_timestamp}|stftype=2'
 
         # 搜索指定页码
-        if pn:
-            params['pn'] = str((int(pn) - 1) * 10)
+        if self.pn:
+            params['pn'] = str((int(self.pn) - 1) * 10)
 
         # logger.debug(params)
         headers = {
@@ -139,7 +142,7 @@ class BaiduPc:
             'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36'
         }
         try:
-            response = requests.get(url, headers=headers, params=params, proxies=proxies, timeout=10, allow_redirects=False)
+            response = requests.get(url, headers=headers, params=params, proxies=self.proxies, timeout=10, allow_redirects=False)
             # logger.debug(response.url)
             response.raise_for_status()
             response.encoding = 'utf-8'
@@ -165,5 +168,8 @@ class BaiduPc:
 
     def search(self, keyword, date_range=None, pn=None, proxies=None):
         self.keyword = keyword
-        html_content = self.get_baidupc_serp(keyword, date_range, pn, proxies)
+        self.date_range = date_range
+        self.pn = pn
+        self.proxies = proxies
+        html_content = self.get_baidupc_serp(keyword)
         return self.handle_response(html_content)

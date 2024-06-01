@@ -10,6 +10,9 @@ class BaiduMobile:
         self.random_params = gen_random_params()
         self.keyword = None
         self.recomment_list = []
+        self.date_range = None
+        self.pn = None
+        self.proxies = None
 
     def extract_baidum_data(self, html_content):
         search_data = []
@@ -26,6 +29,10 @@ class BaiduMobile:
             date_time = ""
             source = ""
 
+            order = int(result.get('order', 0))
+            pn = self.pn if self.pn is not None else 1
+            ranking = order + (pn - 1) * 10
+
             summary_element = result.select_one('div[class*=summary-]')
             if summary_element:
                 description = clean_html_tags(summary_element.get_text().strip())
@@ -41,11 +48,11 @@ class BaiduMobile:
 
             if title_element and url:
                 title_text = clean_html_tags(title_element.get_text().strip())
-                search_data.append({'title': title_text, 'url': url, 'description': description, 'date_time': date_time, "source": source})
+                search_data.append({'title': title_text, 'url': url, 'description': description, 'date_time': date_time, "source": source, "ranking": ranking})
 
         return search_data
 
-    def get_recommend(self, keyword, qid, proxies=None):
+    def get_recommend(self, keyword, qid):
         url = 'https://m.baidu.com/rec'
         params = {
             'word': keyword,
@@ -67,7 +74,7 @@ class BaiduMobile:
             'User-Agent': 'Mozilla/5.0 (Linux; Android 13; SM-G981B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Mobile Safari/537.36 baiduboxapp/13.10.0.10',
         }
         try:
-            response = requests.get(url, headers=headers, params=params, proxies=proxies, timeout=10)
+            response = requests.get(url, headers=headers, params=params, proxies=self.proxies, timeout=10)
             response.raise_for_status()
             response.encoding = 'utf-8'
             json_data = response.json()
@@ -87,33 +94,33 @@ class BaiduMobile:
         except requests.exceptions.RequestException as e:
             return []
 
-    def get_baidum_serp(self, keyword, date_range=None, pn=None, proxies=None):
+    def get_baidum_serp(self, keyword):
         url = 'https://m.baidu.com/s'
         params = {
             'word': keyword
         }
-        if date_range:
-            start_date, end_date = date_range.split(',')
+        if self.date_range:
+            start_date, end_date = self.date_range.split(',')
             start_timestamp = int(datetime.strptime(start_date, '%Y%m%d').timestamp())
             end_timestamp = int(datetime.strptime(end_date, '%Y%m%d').timestamp())
             params['gpc'] = f'stf={start_timestamp},{end_timestamp}|stftype=2'
-        if pn:
-            params['pn'] = str((int(pn) - 1) * 10)
+        if self.pn:
+            params['pn'] = str((int(self.pn) - 1) * 10)
         headers = {
             'Cookie': f'BAIDUID={self.random_params["baiduid"]}:FG=1; BAIDUID_BFESS={self.random_params["baiduid"]}:FG=1;BDUSS={self.random_params["bduss"]};',
             'User-Agent': 'Mozilla/5.0 (Linux; Android 13; SM-G981B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Mobile Safari/537.36 baiduboxapp/13.10.0.10'
         }
         try:
-            response = requests.get(url, headers=headers, params=params, proxies=proxies, timeout=10)
+            response = requests.get(url, headers=headers, params=params, proxies=self.proxies, timeout=10)
             response.raise_for_status()
             response.encoding = 'utf-8'
 
             # 如果没有传页码或者是第1页则获取相关搜索词
-            if pn is None or pn==1:
+            if self.pn is None or self.pn==1:
                 res_headers = response.headers
                 if 'qid' in res_headers:
                     qid = res_headers['qid']
-                self.recomment_list = self.get_recommend(keyword, qid=qid, proxies=proxies)
+                self.recomment_list = self.get_recommend(keyword, qid=qid)
 
                 soup = BeautifulSoup(response.text, 'html.parser')
                 page_rcmd = [elem.get_text() for elem in soup.select('a.c-fwb, span.c-fwb')]
@@ -142,5 +149,8 @@ class BaiduMobile:
             return response
 
     def search(self, keyword, date_range=None, pn=None, proxies=None):
-        html_content = self.get_baidum_serp(keyword, date_range, pn, proxies)
+        self.date_range = date_range
+        self.pn = pn
+        self.proxies = proxies
+        html_content = self.get_baidum_serp(keyword)
         return self.handle_response(html_content)
