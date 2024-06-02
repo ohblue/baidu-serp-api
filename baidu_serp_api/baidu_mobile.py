@@ -17,7 +17,7 @@ class BaiduMobile:
     def extract_baidum_data(self, html_content):
         search_data = []
         soup = BeautifulSoup(html_content, 'html.parser')
-        search_results = soup.select('div[tpl="www_index"]')
+        search_results = soup.select('div[tpl="www_index"], div[tpl="www_struct"]')
         for result in search_results:
             title_element = result.find('p', class_='cu-title')
 
