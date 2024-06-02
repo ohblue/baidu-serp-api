@@ -118,9 +118,9 @@ class BaiduMobile:
             # 如果没有传页码或者是第1页则获取相关搜索词
             if self.pn is None or self.pn==1:
                 res_headers = response.headers
-                if 'qid' in res_headers:
-                    qid = res_headers['qid']
-                self.recomment_list = self.get_recommend(keyword, qid=qid)
+                qid = res_headers.get('qid', None)
+                if qid:
+                    self.recomment_list = self.get_recommend(keyword, qid=qid)
 
                 soup = BeautifulSoup(response.text, 'html.parser')
                 page_rcmd = [elem.get_text() for elem in soup.select('a.c-fwb, span.c-fwb')]
