@@ -13,11 +13,13 @@ class BaiduMobile:
         self.date_range = None
         self.pn = None
         self.proxies = None
+        self.match_count = 0
 
     def extract_baidum_data(self, html_content):
         search_data = []
         soup = BeautifulSoup(html_content, 'html.parser')
         search_results = soup.select('div[tpl="www_index"], div[tpl="www_struct"]')
+        
         for result in search_results:
             title_element = result.find('p', class_='cu-title')
 
@@ -48,6 +50,8 @@ class BaiduMobile:
 
             if title_element and url:
                 title_text = clean_html_tags(title_element.get_text().strip())
+                if self.keyword in title_text:
+                    self.match_count += 1
                 search_data.append({'title': title_text, 'url': url, 'description': description, 'date_time': date_time, "source": source, "ranking": ranking})
 
         return search_data
@@ -136,19 +140,23 @@ class BaiduMobile:
         if isinstance(response, str):
             if '百度安全验证' in response:
                 return {'code': 501, 'msg': '百度安全验证'}
-            elif '未找到相关结果' in response:
+            if '未找到相关结果' in response:
                 return {'code': 404, 'msg': '未找到相关结果'}
-            else:
-                soup = BeautifulSoup(response, 'html.parser')
-                if not soup.find('p', class_='cu-title'):
-                    return {'code': 403, 'msg': '疑似违禁词'}
-                search_results = self.extract_baidum_data(response)
-                last_page = 'new-nextpage' not in response
-                return {'code': 200, 'msg': 'ok', 'data': {'results': search_results, 'recomment': self.recomment_list, 'last_page': last_page}}
+            soup = BeautifulSoup(response, 'html.parser')
+            if not soup.find('p', class_='cu-title'):
+                return {'code': 403, 'msg': '疑似违禁词'}
+            data = {
+                'results': self.extract_baidum_data(response),
+                'recommend': self.recomment_list,
+                'last_page': 'new-nextpage' not in response,
+                'match_count': self.match_count
+            }
+            return {'code': 200, 'msg': 'ok', 'data': data}
         else:
             return response
 
     def search(self, keyword, date_range=None, pn=None, proxies=None):
+        self.keyword = keyword
         self.date_range = date_range
         self.pn = pn
         self.proxies = proxies

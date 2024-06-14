@@ -13,6 +13,7 @@ class BaiduPc:
         self.date_range = None
         self.pn = None
         self.proxies = None
+        self.match_count = 0
 
     def extract_baidupc_data(self, html_content):
         soup = BeautifulSoup(html_content, 'html.parser')
@@ -43,6 +44,8 @@ class BaiduPc:
 
             if title_element and url:
                 title_text = clean_html_tags(title_element.get_text().strip())
+                if self.keyword in title_text:
+                    self.match_count += 1
                 result_data.append({"title": title_text, "url": url, "description": description, "date_time": date_time, "source": source, "ranking": ranking})
 
         return result_data
@@ -143,7 +146,6 @@ class BaiduPc:
         }
         try:
             response = requests.get(url, headers=headers, params=params, proxies=self.proxies, timeout=10, allow_redirects=False)
-            # logger.debug(response.url)
             response.raise_for_status()
             response.encoding = 'utf-8'
             return response.text
@@ -154,15 +156,17 @@ class BaiduPc:
         if isinstance(response, str):
             if '百度安全验证' in response or response.strip() == '':
                 return {'code': 501, 'msg': '百度安全验证'}
-            elif '未找到相关结果' in response:
+            if '未找到相关结果' in response:
                 return {'code': 404, 'msg': '未找到相关结果'}
-            elif '相关搜索' not in response and 'site:' not in self.keyword:
+            if '相关搜索' not in response and 'site:' not in self.keyword:
                 return {'code': 403, 'msg': '疑似违禁词'}
-            else:
-                search_results = self.extract_baidupc_data(response)
-                recomment_list = self.get_recommend(response)
-                last_page = '下一页' not in response
-                return {'code': 200, 'msg': 'ok', 'data': {'results': search_results, 'recommend':recomment_list, 'last_page': last_page}}
+            data = {
+                'results': self.extract_baidupc_data(response),
+                'recommend': self.get_recommend(response),
+                'last_page': '下一页' not in response,
+                'match_count': self.match_count
+            }
+            return {'code': 200, 'msg': 'ok', 'data': data}
         else:
             return response
 
