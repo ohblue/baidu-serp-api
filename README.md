@@ -22,6 +22,9 @@ print(results)
 m_serp = BaiduMobile()
 results = m_serp.search('keyword', date_range='day', pn='2', proxies={'http': 'http://your-proxy-server:port'})
 print(results)
+
+# Filter the specified content. The following returned results do not contain 'recommend', 'last_page', 'match_count'
+results = m_serp.search('关键词', exclude=['recommend', 'last_page', 'match_count'])
 ```
 
 ### Parameters
@@ -69,6 +72,9 @@ print(results)
 m_serp = BaiduMobile()
 results = m_serp.search('关键词', date_range='20240501,20240531', pn='2', proxies={'http': 'http://你的代理服务器:端口'})
 print(results)
+
+# 过滤指定内容，以下返回的结果不含'recommend', 'last_page', 'match_count'
+results = m_serp.search('关键词', exclude=['recommend', 'last_page', 'match_count'])
 ```
 
 ### 参数

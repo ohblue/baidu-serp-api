@@ -14,6 +14,7 @@ class BaiduMobile:
         self.pn = None
         self.proxies = None
         self.match_count = 0
+        self.exclude = []
 
     def extract_baidum_data(self, html_content):
         search_data = []
@@ -120,8 +121,8 @@ class BaiduMobile:
             response.raise_for_status()
             response.encoding = 'utf-8'
 
-            # 如果没有传页码或者是第1页则获取相关搜索词
-            if self.pn is None or self.pn==1:
+            # 如果没有传页码或者是第1页且exclude不包含'recommend'则获取相关搜索词
+            if (self.pn is None or self.pn == 1) and 'recommend' not in self.exclude:
                 res_headers = response.headers
                 qid = res_headers.get('qid', None)
                 if qid:
@@ -152,14 +153,18 @@ class BaiduMobile:
                 'last_page': 'new-nextpage' not in response,
                 'match_count': self.match_count
             }
+            keys_to_delete = [key for key in self.exclude]
+            for key in keys_to_delete:
+                del data[key]
             return {'code': 200, 'msg': 'ok', 'data': data}
         else:
             return response
 
-    def search(self, keyword, date_range=None, pn=None, proxies=None):
+    def search(self, keyword, date_range=None, pn=None, proxies=None, exclude=[]):
         self.keyword = keyword
         self.date_range = date_range
         self.pn = pn
         self.proxies = proxies
+        self.exclude = exclude
         html_content = self.get_baidum_serp(keyword)
         return self.handle_response(html_content)

@@ -14,6 +14,7 @@ class BaiduPc:
         self.pn = None
         self.proxies = None
         self.match_count = 0
+        self.exclude = []
 
     def extract_baidupc_data(self, html_content):
         soup = BeautifulSoup(html_content, 'html.parser')
@@ -126,7 +127,7 @@ class BaiduPc:
         # logger.debug(params)
         headers = {
             'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
-            'Accept-Encoding': 'gzip, deflate, br, zstd',
+            # 'Accept-Encoding': 'gzip, deflate, br, zstd',
             'Accept-Language': 'zh-CN,zh;q=0.9',
             'Cache-Control': 'no-cache',
             'Connection': 'keep-alive',
@@ -145,6 +146,7 @@ class BaiduPc:
                     f'BDUSS={self.random_params["bduss"]}; H_PS_645EC={self.random_params["rsv_t"]}; H_PS_PSSID={self.random_params["rsv_sid"]}',
             'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36'
         }
+
         try:
             response = requests.get(url, headers=headers, params=params, proxies=self.proxies, timeout=10, allow_redirects=False)
             response.raise_for_status()
@@ -167,14 +169,18 @@ class BaiduPc:
                 'last_page': '下一页' not in response,
                 'match_count': self.match_count
             }
+            keys_to_delete = [key for key in self.exclude]
+            for key in keys_to_delete:
+                del data[key]
             return {'code': 200, 'msg': 'ok', 'data': data}
         else:
             return response
 
-    def search(self, keyword, date_range=None, pn=None, proxies=None):
+    def search(self, keyword, date_range=None, pn=None, proxies=None, exclude=[]):
         self.keyword = keyword
         self.date_range = date_range
         self.pn = pn
         self.proxies = proxies
+        self.exclude = exclude
         html_content = self.get_baidupc_serp(keyword)
         return self.handle_response(html_content)
