@@ -19,6 +19,7 @@ class BaiduPc:
         soup = BeautifulSoup(html_content, 'html.parser')
         search_results = soup.select('div[tpl="se_com_default"]')
         result_data = []
+        self.match_count = 0
         for result in search_results:
             title_element = result.select_one('h3.c-title')
 

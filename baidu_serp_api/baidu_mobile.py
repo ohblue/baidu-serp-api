@@ -17,6 +17,7 @@ class BaiduMobile:
 
     def extract_baidum_data(self, html_content):
         search_data = []
+        self.match_count = 0
         soup = BeautifulSoup(html_content, 'html.parser')
         search_results = soup.select('div[tpl="www_index"], div[tpl="www_struct"]')
         
