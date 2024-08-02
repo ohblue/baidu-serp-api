@@ -9,14 +9,13 @@ class BaiduPc:
 
     def __init__(self):
         self.random_params = gen_random_params()
-        self.keyword = None
         self.date_range = None
         self.pn = None
         self.proxies = None
         self.match_count = 0
         self.exclude = []
 
-    def extract_baidupc_data(self, html_content):
+    def extract_baidupc_data(self, html_content, keyword):
         soup = BeautifulSoup(html_content, 'html.parser')
         search_results = soup.select('div[tpl="se_com_default"]')
         result_data = []
@@ -46,7 +45,7 @@ class BaiduPc:
 
             if title_element and url:
                 title_text = clean_html_tags(title_element.get_text().strip())
-                if self.keyword in title_text:
+                if keyword in title_text:
                     self.match_count += 1
                 result_data.append({"title": title_text, "url": url, "description": description, "date_time": date_time, "source": source, "ranking": ranking})
 
@@ -155,16 +154,16 @@ class BaiduPc:
         except requests.exceptions.RequestException as e:
             return {'code': 500, 'msg': '网络请求失败'}
 
-    def handle_response(self, response):
+    def handle_response(self, response, keyword):
         if isinstance(response, str):
             if '百度安全验证' in response or response.strip() == '':
                 return {'code': 501, 'msg': '百度安全验证'}
             if '未找到相关结果' in response:
                 return {'code': 404, 'msg': '未找到相关结果'}
-            if '相关搜索' not in response and 'site:' not in self.keyword:
+            if '相关搜索' not in response and 'site:' not in keyword:
                 return {'code': 403, 'msg': '疑似违禁词'}
             data = {
-                'results': self.extract_baidupc_data(response),
+                'results': self.extract_baidupc_data(response, keyword),
                 'recommend': self.get_recommend(response),
                 'last_page': '下一页' not in response,
                 'match_count': self.match_count
@@ -177,10 +176,9 @@ class BaiduPc:
             return response
 
     def search(self, keyword, date_range=None, pn=None, proxies=None, exclude=[]):
-        self.keyword = keyword.strip()
         self.date_range = date_range
         self.pn = pn
         self.proxies = proxies
         self.exclude = exclude
-        html_content = self.get_baidupc_serp(self.keyword)
-        return self.handle_response(html_content)
+        html_content = self.get_baidupc_serp(keyword.strip())
+        return self.handle_response(html_content, keyword.strip())

@@ -8,7 +8,6 @@ class BaiduMobile:
     
     def __init__(self):
         self.random_params = gen_random_params()
-        self.keyword = None
         self.recomment_list = []
         self.date_range = None
         self.pn = None
@@ -16,7 +15,7 @@ class BaiduMobile:
         self.match_count = 0
         self.exclude = []
 
-    def extract_baidum_data(self, html_content):
+    def extract_baidum_data(self, html_content, keyword):
         search_data = []
         self.match_count = 0
         soup = BeautifulSoup(html_content, 'html.parser')
@@ -52,7 +51,7 @@ class BaiduMobile:
 
             if title_element and url:
                 title_text = clean_html_tags(title_element.get_text().strip())
-                if self.keyword in title_text:
+                if keyword in title_text:
                     self.match_count += 1
                 search_data.append({'title': title_text, 'url': url, 'description': description, 'date_time': date_time, "source": source, "ranking": ranking})
 
@@ -138,7 +137,7 @@ class BaiduMobile:
         except requests.exceptions.RequestException as e:
             return {'code': 500, 'msg': '网络请求失败'}
 
-    def handle_response(self, response):
+    def handle_response(self, response, keyword):
         if isinstance(response, str):
             if '百度安全验证' in response:
                 return {'code': 501, 'msg': '百度安全验证'}
@@ -148,7 +147,7 @@ class BaiduMobile:
             if not soup.find('p', class_='cu-title'):
                 return {'code': 403, 'msg': '疑似违禁词'}
             data = {
-                'results': self.extract_baidum_data(response),
+                'results': self.extract_baidum_data(response, keyword),
                 'recommend': self.recomment_list,
                 'last_page': 'new-nextpage' not in response,
                 'match_count': self.match_count
@@ -161,10 +160,9 @@ class BaiduMobile:
             return response
 
     def search(self, keyword, date_range=None, pn=None, proxies=None, exclude=[]):
-        self.keyword = keyword.strip()
         self.date_range = date_range
         self.pn = pn
         self.proxies = proxies
         self.exclude = exclude
-        html_content = self.get_baidum_serp(self.keyword)
-        return self.handle_response(html_content)
+        html_content = self.get_baidum_serp(keyword.strip())
+        return self.handle_response(html_content, keyword.strip())
