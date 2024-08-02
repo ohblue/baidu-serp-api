@@ -177,10 +177,10 @@ class BaiduPc:
             return response
 
     def search(self, keyword, date_range=None, pn=None, proxies=None, exclude=[]):
-        self.keyword = keyword
+        self.keyword = keyword.strip()
         self.date_range = date_range
         self.pn = pn
         self.proxies = proxies
         self.exclude = exclude
-        html_content = self.get_baidupc_serp(keyword)
+        html_content = self.get_baidupc_serp(self.keyword)
         return self.handle_response(html_content)
