@@ -2,7 +2,7 @@ import requests
 from bs4 import BeautifulSoup
 import json
 from datetime import datetime
-from .util import gen_random_params, clean_html_tags, logger
+from .util import gen_random_params, clean_html_tags, logger, convert_date_format
 
 class BaiduMobile:
     
@@ -44,6 +44,7 @@ class BaiduMobile:
                 if date_time_element:
                     description = description.replace(date_time_element.get_text().strip(), '')
                     date_time = date_time_element.get_text().strip()
+                    date_time = convert_date_format(date_time)
 
             source_element = result.select_one('div[class*=_text_]')
             if source_element:

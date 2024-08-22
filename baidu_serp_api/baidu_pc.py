@@ -2,7 +2,7 @@ import requests
 from bs4 import BeautifulSoup
 import json
 from datetime import datetime
-from .util import gen_random_params, clean_html_tags, logger
+from .util import gen_random_params, clean_html_tags, logger, convert_date_format
 import re
 
 class BaiduPc:
@@ -38,6 +38,7 @@ class BaiduPc:
             date_time_element = result.select_one('span.c-color-gray2')
             if date_time_element:
                 date_time = date_time_element.get_text().strip()
+                date_time = convert_date_format(date_time)
 
             source_element = result.select_one('span.c-color-gray')
             if source_element:

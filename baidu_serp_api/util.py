@@ -1,3 +1,4 @@
+from datetime import datetime, timedelta
 import random
 import string
 import re
@@ -38,3 +39,23 @@ def clean_html_tags(html_content):
     clean_text = re.sub('<[^<]+?>|\\n', '', html_content)
     clean_text = ' '.join(clean_text.split())
     return clean_text
+
+def convert_date_format(date_str):
+    date_formats = [
+        (r"(\d+)分钟前", lambda m: (datetime.now() - timedelta(minutes=int(m.group(1)))).strftime('%Y-%m-%d')),
+        (r"(\d+)小时前", lambda m: (datetime.now() - timedelta(hours=int(m.group(1)))).strftime('%Y-%m-%d')),
+        (r"今天", lambda m: datetime.now().strftime('%Y-%m-%d')),
+        (r"昨天", lambda m: (datetime.now() - timedelta(days=1)).strftime('%Y-%m-%d')),
+        (r"昨天 (\d+:\d+)", lambda m: (datetime.now() - timedelta(days=1)).strftime('%Y-%m-%d')),
+        (r"前天", lambda m: (datetime.now() - timedelta(days=2)).strftime('%Y-%m-%d')),
+        (r"前天 (\d+:\d+)", lambda m: (datetime.now() - timedelta(days=2)).strftime('%Y-%m-%d')),
+        (r"(\d+)天前", lambda m: (datetime.now() - timedelta(days=int(m.group(1)))).strftime('%Y-%m-%d')),
+        (r"(\d+)月(\d+)日", lambda m: f"{datetime.now().strftime('%Y')}-{int(m.group(1)):02d}-{int(m.group(2)):02d}"),
+        (r"(\d+)年(\d+)月(\d+)日", lambda m: f"{m.group(1)}-{int(m.group(2)):02d}-{int(m.group(3)):02d}")
+    ]
+    
+    for fmt, func in date_formats:
+        match = re.match(fmt, date_str)
+        if match:
+            return func(match)
+    return date_str
