@@ -8,7 +8,8 @@ class BaiduMobile:
     
     def __init__(self):
         self.random_params = gen_random_params()
-        self.recomment_list = []
+        self.recommend = []
+        self.ext_recommend = []
         self.date_range = None
         self.pn = None
         self.proxies = None
@@ -58,7 +59,14 @@ class BaiduMobile:
 
         return search_data
 
-    def get_recommend(self, keyword, qid):
+    def get_recommend(self, response):
+        soup = BeautifulSoup(response, 'html.parser')
+        page_rcmd = [elem.get_text() for elem in soup.select('a.c-fwb, span.c-fwb')]
+        # 对page_rcmd进行排重
+        recommend = list(set(page_rcmd))
+        return recommend
+
+    def get_ext_recommend(self, keyword, qid):
         url = 'https://m.baidu.com/rec'
         params = {
             'word': keyword,
@@ -95,8 +103,8 @@ class BaiduMobile:
                     down_values.extend(item['down'])
 
                 # 排重并合并为新的列表
-                recomment_list = list(set(up_values + down_values))
-                return recomment_list
+                ext_recommend = list(set(up_values + down_values))
+                return ext_recommend
         except requests.exceptions.RequestException as e:
             return []
 
@@ -121,18 +129,14 @@ class BaiduMobile:
             response.raise_for_status()
             response.encoding = 'utf-8'
 
-            # 如果没有传页码或者是第1页且exclude不包含'recommend'则获取相关搜索词
-            if (self.pn is None or self.pn == 1) and 'recommend' not in self.exclude:
+            self.recommend = self.get_recommend(response.text)
+            
+            # 更多相关搜索词仅在没有传递页码或者是第1页且exclude不包含'ext_recommend'时获取
+            if (self.pn is None or self.pn == 1) and 'ext_recommend' not in self.exclude:
                 res_headers = response.headers
                 qid = res_headers.get('qid', None)
                 if qid:
-                    self.recomment_list = self.get_recommend(keyword, qid=qid)
-
-                soup = BeautifulSoup(response.text, 'html.parser')
-                page_rcmd = [elem.get_text() for elem in soup.select('a.c-fwb, span.c-fwb')]
-                
-                # 合并并排重
-                self.recomment_list = list(set(self.recomment_list + page_rcmd))
+                    self.ext_recommend = self.get_ext_recommend(keyword, qid)
 
             return response.text
         except requests.exceptions.RequestException as e:
@@ -145,11 +149,12 @@ class BaiduMobile:
             if '未找到相关结果' in response:
                 return {'code': 404, 'msg': '未找到相关结果'}
             soup = BeautifulSoup(response, 'html.parser')
-            if not soup.find('p', class_='cu-title'):
-                return {'code': 403, 'msg': '疑似违禁词'}
+            if not soup.find('p', class_='cu-title') or not self.recommend:
+                return {'code': 403, 'msg': '疑似违禁词或推荐词为空'}
             data = {
                 'results': self.extract_baidum_data(response, keyword),
-                'recommend': self.recomment_list,
+                'recommend': self.recommend,
+                'ext_recommend': self.ext_recommend,
                 'last_page': 'new-nextpage' not in response,
                 'match_count': self.match_count
             }
@@ -160,10 +165,15 @@ class BaiduMobile:
         else:
             return response
 
-    def search(self, keyword, date_range=None, pn=None, proxies=None, exclude=[]):
+    def search(self, keyword, date_range=None, pn=None, proxies=None, exclude=['ext_recommend']):
         self.date_range = date_range
         self.pn = pn
         self.proxies = proxies
         self.exclude = exclude
+
+        # 如果exclude包含'recommend'，则自动添加'ext_recommend'
+        if 'recommend' in self.exclude and 'ext_recommend' not in self.exclude:
+            self.exclude.append('ext_recommend')
+            
         html_content = self.get_baidum_serp(keyword.strip())
         return self.handle_response(html_content, keyword.strip())

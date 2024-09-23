@@ -72,8 +72,8 @@ class BaiduPc:
                     for item in sublist:
                         keyword_set.add(item['word'])
 
-        recomment_list = list(keyword_set)
-        return recomment_list
+        recommend = list(keyword_set)
+        return recommend
 
     def get_baidupc_serp(self, keyword):
         url = 'http://www.baidu.com/s'
@@ -162,7 +162,7 @@ class BaiduPc:
             if '未找到相关结果' in response:
                 return {'code': 404, 'msg': '未找到相关结果'}
             if '相关搜索' not in response and 'site:' not in keyword:
-                return {'code': 403, 'msg': '疑似违禁词'}
+                return {'code': 403, 'msg': '疑似违禁词或推荐词为空'}
             data = {
                 'results': self.extract_baidupc_data(response, keyword),
                 'recommend': self.get_recommend(response),
