@@ -7,6 +7,7 @@ setup(
     install_requires=[
         'requests',
         'beautifulsoup4',
+        'loguru'
     ],
     entry_points={
         'console_scripts': [
