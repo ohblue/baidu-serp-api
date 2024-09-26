@@ -161,8 +161,8 @@ class BaiduPc:
                 return {'code': 501, 'msg': '百度安全验证'}
             if '未找到相关结果' in response:
                 return {'code': 404, 'msg': '未找到相关结果'}
-            if '相关搜索' not in response and 'site:' not in keyword:
-                return {'code': 403, 'msg': '疑似违禁词或推荐词为空'}
+            # if '相关搜索' not in response and 'site:' not in keyword:
+            #     return {'code': 403, 'msg': '疑似违禁词或推荐词为空'}
             data = {
                 'results': self.extract_baidupc_data(response, keyword),
                 'recommend': self.get_recommend(response),
