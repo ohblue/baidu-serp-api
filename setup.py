@@ -16,7 +16,7 @@ setup(
     author='Ben Chen',
     author_email='chan@live.cn',
     description='A library to extract data from Baidu SERP and output it as JSON objects',
-    long_description=open('README.md').read(),
+    long_description=open('README.md', encoding='utf-8').read(),
     long_description_content_type='text/markdown',
     url='https://github.com/ohblue/baidu-serp-api',
     classifiers=[
