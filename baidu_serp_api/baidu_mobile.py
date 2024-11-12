@@ -149,7 +149,7 @@ class BaiduMobile:
             if '未找到相关结果' in response:
                 return {'code': 404, 'msg': '未找到相关结果'}
             soup = BeautifulSoup(response, 'html.parser')
-            if not soup.find('p', class_='cu-title') or not self.recommend:
+            if (not soup.find('p', class_='cu-title') or not self.recommend) and 'site:' not in keyword and not keyword.startswith(('http://', 'https://', 'www.', 'm.')):
                 return {'code': 403, 'msg': '疑似违禁词或推荐词为空'}
             data = {
                 'results': self.extract_baidum_data(response, keyword),

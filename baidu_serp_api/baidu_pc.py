@@ -126,22 +126,22 @@ class BaiduPc:
 
         # logger.debug(params)
         headers = {
-            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
-            # 'Accept-Encoding': 'gzip, deflate, br, zstd',
-            'Accept-Language': 'zh-CN,zh;q=0.9',
-            'Cache-Control': 'no-cache',
-            'Connection': 'keep-alive',
-            'Host': 'www.baidu.com',
-            'Pragma': 'no-cache',
-            'Sec-Fetch-Dest': 'document',
-            'Sec-Fetch-Mode': 'navigate',
-            'Sec-Fetch-Site': 'none',
-            'Sec-Fetch-User': '?1',
-            'Upgrade-Insecure-Requests': '1',
-            'sec-ch-ua': '"Chromium";v="124", "Google Chrome";v="124", "Not-A.Brand";v="99"',
-            'sec-ch-ua-mobile': '?0',
-            'sec-ch-ua-platform': '"macOS"',
-            'Referer': 'http://www.baidu.com/',
+            # 'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
+            # # 'Accept-Encoding': 'gzip, deflate, br, zstd',
+            # 'Accept-Language': 'zh-CN,zh;q=0.9',
+            # 'Cache-Control': 'no-cache',
+            # 'Connection': 'keep-alive',
+            # 'Host': 'www.baidu.com',
+            # 'Pragma': 'no-cache',
+            # 'Sec-Fetch-Dest': 'document',
+            # 'Sec-Fetch-Mode': 'navigate',
+            # 'Sec-Fetch-Site': 'none',
+            # 'Sec-Fetch-User': '?1',
+            # 'Upgrade-Insecure-Requests': '1',
+            # 'sec-ch-ua': '"Chromium";v="124", "Google Chrome";v="124", "Not-A.Brand";v="99"',
+            # 'sec-ch-ua-mobile': '?0',
+            # 'sec-ch-ua-platform': '"macOS"',
+            # 'Referer': 'http://www.baidu.com/',
             'cookie': f'BAIDUID={self.random_params["baiduid"]}:FG=1; BAIDUID_BFESS={self.random_params["baiduid"]}:FG=1; '\
                     f'BDUSS={self.random_params["bduss"]}; H_PS_645EC={self.random_params["rsv_t"]}; H_PS_PSSID={self.random_params["rsv_sid"]}',
             'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36'
@@ -161,7 +161,7 @@ class BaiduPc:
                 return {'code': 501, 'msg': '百度安全验证'}
             if '未找到相关结果' in response:
                 return {'code': 404, 'msg': '未找到相关结果'}
-            if '相关搜索' not in response and 'site:' not in keyword:
+            if '相关搜索' not in response and 'site:' not in keyword and not keyword.startswith(('http://', 'https://', 'www.', 'm.')):
                 return {'code': 403, 'msg': '疑似违禁词或推荐词为空'}
             data = {
                 'results': self.extract_baidupc_data(response, keyword),
