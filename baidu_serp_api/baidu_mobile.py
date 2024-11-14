@@ -86,9 +86,10 @@ class BaiduMobile:
         headers = {
             'Cookie': f'BAIDUID={self.random_params["baiduid"]}:FG=1; BAIDUID_BFESS={self.random_params["baiduid"]}:FG=1;BDUSS={self.random_params["bduss"]};',
             'User-Agent': 'Mozilla/5.0 (Linux; Android 13; SM-G981B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Mobile Safari/537.36 baiduboxapp/13.10.0.10',
+            'Connection': 'close'
         }
         try:
-            response = requests.get(url, headers=headers, params=params, proxies=self.proxies, timeout=10)
+            response = requests.get(url, headers=headers, params=params, proxies=self.proxies, timeout=10, verify=False)
             response.raise_for_status()
             response.encoding = 'utf-8'
             json_data = response.json()
@@ -122,10 +123,11 @@ class BaiduMobile:
             params['pn'] = str((int(self.pn) - 1) * 10)
         headers = {
             'Cookie': f'BAIDUID={self.random_params["baiduid"]}:FG=1; BAIDUID_BFESS={self.random_params["baiduid"]}:FG=1;BDUSS={self.random_params["bduss"]};',
-            'User-Agent': 'Mozilla/5.0 (Linux; Android 13; SM-G981B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Mobile Safari/537.36 baiduboxapp/13.10.0.10'
+            'User-Agent': 'Mozilla/5.0 (Linux; Android 13; SM-G981B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Mobile Safari/537.36 baiduboxapp/13.10.0.10',
+            'Connection': 'close'
         }
         try:
-            response = requests.get(url, headers=headers, params=params, proxies=self.proxies, timeout=10)
+            response = requests.get(url, headers=headers, params=params, proxies=self.proxies, timeout=10, verify=False)
             response.raise_for_status()
             response.encoding = 'utf-8'
 
@@ -140,12 +142,12 @@ class BaiduMobile:
 
             return response.text
         except requests.exceptions.RequestException as e:
-            return {'code': 500, 'msg': '网络请求失败'}
+            return {'code': 500, 'msg': e}
 
     def handle_response(self, response, keyword):
         if isinstance(response, str):
             if '百度安全验证' in response:
-                return {'code': 501, 'msg': '百度安全验证'}
+                return {'code': 501, 'msg': '百度M安全验证'}
             if '未找到相关结果' in response:
                 return {'code': 404, 'msg': '未找到相关结果'}
             soup = BeautifulSoup(response, 'html.parser')
