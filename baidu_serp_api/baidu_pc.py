@@ -133,10 +133,11 @@ class BaiduPc:
         }
 
         try:
-            response = requests.get(url, headers=headers, params=params, proxies=self.proxies, timeout=10, verify=False, allow_redirects=False)
-            response.raise_for_status()
-            response.encoding = 'utf-8'
-            return response.text
+            with requests.Session() as session:
+                response = session.get(url, headers=headers, params=params, proxies=self.proxies, timeout=10, verify=False, allow_redirects=False)
+                response.raise_for_status()
+                response.encoding = 'utf-8'
+                return response.text
         except requests.exceptions.RequestException as e:
             return {'code': 500, 'msg': e}
 
@@ -166,5 +167,6 @@ class BaiduPc:
         self.pn = pn
         self.proxies = proxies
         self.exclude = exclude
+        self.random_params = gen_random_params()
         html_content = self.get_baidupc_serp(keyword.strip())
         return self.handle_response(html_content, keyword.strip())
