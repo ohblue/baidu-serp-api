@@ -86,25 +86,27 @@ class BaiduMobile:
         headers = {
             'Cookie': f'BAIDUID={self.random_params["baiduid"]}:FG=1; BAIDUID_BFESS={self.random_params["baiduid"]}:FG=1;BDUSS={self.random_params["bduss"]};',
             'User-Agent': 'Mozilla/5.0 (Linux; Android 13; SM-G981B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Mobile Safari/537.36 baiduboxapp/13.10.0.10',
+            'Connection': 'close'
         }
         try:
-            response = requests.get(url, headers=headers, params=params, proxies=self.proxies, timeout=10)
-            response.raise_for_status()
-            response.encoding = 'utf-8'
-            json_data = response.json()
-            # 获取所有键名为'up'和'down'的值
-            up_values = []
-            down_values = []
-            if json_data['errcode'] != 0:
-                return []
-            else: 
-                for item in json_data['rs']['rcmd']['list']:
-                    up_values.extend(item['up'])
-                    down_values.extend(item['down'])
+            with requests.Session() as session:
+                response = session.get(url, headers=headers, params=params, proxies=self.proxies, timeout=10, verify=False)
+                response.raise_for_status()
+                response.encoding = 'utf-8'
+                json_data = response.json()
+                # 获取所有键名为'up'和'down'的值
+                up_values = []
+                down_values = []
+                if json_data['errcode'] != 0:
+                    return []
+                else: 
+                    for item in json_data['rs']['rcmd']['list']:
+                        up_values.extend(item['up'])
+                        down_values.extend(item['down'])
 
-                # 排重并合并为新的列表
-                ext_recommend = list(set(up_values + down_values))
-                return ext_recommend
+                    # 排重并合并为新的列表
+                    ext_recommend = list(set(up_values + down_values))
+                    return ext_recommend
         except requests.exceptions.RequestException as e:
             return []
 
@@ -122,34 +124,35 @@ class BaiduMobile:
             params['pn'] = str((int(self.pn) - 1) * 10)
         headers = {
             'Cookie': f'BAIDUID={self.random_params["baiduid"]}:FG=1; BAIDUID_BFESS={self.random_params["baiduid"]}:FG=1;BDUSS={self.random_params["bduss"]};',
-            'User-Agent': 'Mozilla/5.0 (Linux; Android 13; SM-G981B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Mobile Safari/537.36 baiduboxapp/13.10.0.10'
+            'User-Agent': 'Mozilla/5.0 (Linux; Android 13; SM-G981B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Mobile Safari/537.36 baiduboxapp/13.10.0.10',
+            'Connection': 'close'
         }
         try:
-            response = requests.get(url, headers=headers, params=params, proxies=self.proxies, timeout=10)
-            response.raise_for_status()
-            response.encoding = 'utf-8'
+            with requests.Session() as session:
+                response = session.get(url, headers=headers, params=params, proxies=self.proxies, timeout=10, verify=False)
+                response.raise_for_status()
+                response.encoding = 'utf-8'
 
-            self.recommend = self.get_recommend(response.text)
-            
-            # 更多相关搜索词仅在没有传递页码或者是第1页且exclude不包含'ext_recommend'时获取
-            if (self.pn is None or self.pn == 1) and 'ext_recommend' not in self.exclude:
-                res_headers = response.headers
-                qid = res_headers.get('qid', None)
-                if qid:
-                    self.ext_recommend = self.get_ext_recommend(keyword, qid)
+                self.recommend = self.get_recommend(response.text)
+                
+                if (self.pn is None or self.pn == 1) and 'ext_recommend' not in self.exclude:
+                    res_headers = response.headers
+                    qid = res_headers.get('qid', None)
+                    if qid:
+                        self.ext_recommend = self.get_ext_recommend(keyword, qid)
 
-            return response.text
+                return response.text
         except requests.exceptions.RequestException as e:
-            return {'code': 500, 'msg': '网络请求失败'}
+            return {'code': 500, 'msg': e}
 
     def handle_response(self, response, keyword):
         if isinstance(response, str):
             if '百度安全验证' in response:
-                return {'code': 501, 'msg': '百度安全验证'}
+                return {'code': 501, 'msg': '百度M安全验证'}
             if '未找到相关结果' in response:
                 return {'code': 404, 'msg': '未找到相关结果'}
             soup = BeautifulSoup(response, 'html.parser')
-            if not soup.find('p', class_='cu-title') or not self.recommend:
+            if (not soup.find('p', class_='cu-title') or not self.recommend) and 'site:' not in keyword and not keyword.startswith(('http://', 'https://', 'www.', 'm.')):
                 return {'code': 403, 'msg': '疑似违禁词或推荐词为空'}
             data = {
                 'results': self.extract_baidum_data(response, keyword),
@@ -175,5 +178,6 @@ class BaiduMobile:
         if 'recommend' in self.exclude and 'ext_recommend' not in self.exclude:
             self.exclude.append('ext_recommend')
             
+        self.random_params = gen_random_params()
         html_content = self.get_baidum_serp(keyword.strip())
         return self.handle_response(html_content, keyword.strip())
