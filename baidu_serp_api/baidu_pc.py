@@ -135,6 +135,7 @@ class BaiduPc:
             f'BDUSS={random_params["bduss"]}; H_PS_645EC={random_params["rsv_t"]}; H_PS_PSSID={random_params["rsv_sid"]}',
             "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
             "Connection": "close",
+            "Referer": "www.baidu.com"
         }
 
         try:
