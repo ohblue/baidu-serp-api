@@ -39,8 +39,7 @@ jobs:
     
     - name: Verify package metadata
       run: |
-        uv run python -m pip install twine
-        uv run python -m twine check dist/*
+        uvx twine check dist/*
     
     - name: Publish to PyPI
       uses: pypa/gh-action-pypi-publish@v1.8.14
