@@ -120,8 +120,8 @@ class BaiduPc:
             params["pn"] = str((int(pn) - 1) * 10)
 
         # logger.debug(params)
-        # 生成逼真的PC端Cookie
-        pc_cookies = gen_pc_cookies()
+        # 生成逼真的PC端Cookie，传入random_params确保某些值一致
+        pc_cookies = gen_pc_cookies(random_params)
         
         headers = {
             "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",

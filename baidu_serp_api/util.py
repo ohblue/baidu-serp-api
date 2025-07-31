@@ -9,9 +9,10 @@ import random, hashlib
 import time
 
 # 生成PC端浏览器风格的Cookie
-def gen_pc_cookies():
+def gen_pc_cookies(random_params=None):
     """
     基于真实浏览器Cookie结构生成逼真的Cookie
+    某些cookie值与URL参数保持一致以模拟真实浏览器行为
     """
     # 生成32位十六进制BAIDUID
     baiduid = uuid.uuid4().hex.upper()[:32]
@@ -38,8 +39,11 @@ def gen_pc_cookies():
     h_ps_pssid_numbers = [random.randint(60000, 65000) for _ in range(20)]
     h_ps_pssid = '_'.join(map(str, h_ps_pssid_numbers))
     
-    # 生成H_PS_645EC - 随机字符串
-    h_ps_645ec = ''.join(random.choices(string.ascii_letters + string.digits, k=43))
+    # 生成H_PS_645EC - 随机字符串，如果有random_params则使用其中的rsv_t
+    if random_params and 'rsv_t' in random_params:
+        h_ps_645ec = random_params['rsv_t'][:43]  # 使用rsv_t的前43位
+    else:
+        h_ps_645ec = ''.join(random.choices(string.ascii_letters + string.digits, k=43))
     
     # 生成ZFY - Base64风格字符串
     zfy = ''.join(random.choices(string.ascii_letters + string.digits + '+/:', k=43))
@@ -76,12 +80,16 @@ def gen_pc_cookies():
     return '; '.join(cookies)
 
 # 生成移动端浏览器风格的Cookie
-def gen_mobile_cookies():
+def gen_mobile_cookies(random_params=None):
     """
     基于真实移动端浏览器Cookie结构生成逼真的Cookie
+    某些cookie值与URL参数保持一致以模拟真实浏览器行为
     """
-    # 生成基础ID
-    baiduid = uuid.uuid4().hex.upper()[:32]
+    # 生成基础ID，如果有random_params则使用其中的baiduid
+    if random_params and 'baiduid' in random_params:
+        baiduid = random_params['baiduid']
+    else:
+        baiduid = uuid.uuid4().hex.upper()[:32]
     
     # 生成rsv_i - 复杂编码字符串
     rsv_i = ''.join(random.choices(string.ascii_letters + string.digits + '+/=', k=64))
@@ -158,11 +166,18 @@ def gen_random_params():
     rsv_pq = hex(random.getrandbits(64))
     rsv_t = hashlib.md5(str(time.time()).encode('utf-8')).hexdigest()
     
-    # Mobile版使用的参数
+    # Mobile版Cookie和基础功能使用的参数
     bduss = ''.join(random.choices(string.ascii_letters + string.digits, k=176))
     baiduid = uuid.uuid4().hex.upper()[:32]
     timestamp = int(time.time() * 1000)
     r = ''.join(random.choices(string.digits, k=4))
+
+    # Mobile版URL请求参数中特有的参数（PC版不使用）
+    rsv_iqid = ''.join(random.choices(string.digits, k=19))
+    rqid = rsv_iqid  # 通常与rsv_iqid相同
+    sugid = ''.join(random.choices(string.digits, k=14))
+    rsv_sug4_timestamp = int(time.time() * 1000)
+    input_timestamp = rsv_sug4_timestamp + random.randint(1000, 3000)
 
     return {
         'rsv_pq': rsv_pq,
@@ -170,7 +185,13 @@ def gen_random_params():
         'bduss': bduss,
         'baiduid': baiduid,
         'timestamp': timestamp,
-        'r': r
+        'r': r,
+        # Mobile版URL请求参数中特有的参数
+        'rsv_iqid': rsv_iqid,
+        'rqid': rqid,
+        'sugid': sugid,
+        'rsv_sug4': rsv_sug4_timestamp,
+        'inputT': input_timestamp
     }
 
 # 清理html标签

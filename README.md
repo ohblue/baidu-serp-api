@@ -34,6 +34,42 @@ results = m_serp.search('关键词', exclude=['recommend', 'last_page', 'match_c
 - `pn` (optional): Search for results on the specified page.
 - `proxies` (optional): Use proxies for searching.
 
+## Technical Details
+
+### PC Version Request Headers & Cookies
+
+**Key Request Parameters:**
+- `rsv_pq`: Random query parameter (64-bit hex)
+- `rsv_t`: Random timestamp hash
+- `oq`: Original query (same as search keyword)
+
+**Cookie Parameters (automatically generated):**
+- `BAIDUID`: Unique browser identifier (32-char hex)
+- `H_PS_645EC`: Synchronized with `rsv_t` parameter
+- `H_PS_PSSID`: Session ID with multiple numeric segments
+- `BAIDUID_BFESS`: Same as BAIDUID for security
+- Plus 13 additional cookies for complete browser simulation
+
+### Mobile Version Request Headers & Cookies
+
+**Key Request Parameters:**
+- `rsv_iqid`: Random identifier (19 digits)
+- `rsv_t`: Random timestamp hash
+- `sugid`: Suggestion ID (14 digits)
+- `rqid`: Request ID (same as rsv_iqid)
+- `inputT`: Input timestamp
+- Plus 11 additional parameters for mobile simulation
+
+**Cookie Parameters (automatically generated):**
+- `BAIDUID`: Synchronized with internal parameters
+- `H_WISE_SIDS`: Mobile-specific session with 80 numeric segments
+- `rsv_i`: Complex encoded string (64 chars)
+- `__bsi`: Special session ID format
+- `FC_MODEL`: Feature model parameters
+- Plus 14 additional cookies for mobile browser simulation
+
+All parameters are automatically generated and synchronized to ensure realistic browser behavior.
+
 ## Return Values
 
 - `{'code': 500, 'msg': '网络请求错误'}`: Network request exception.

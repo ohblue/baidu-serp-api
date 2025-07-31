@@ -2,7 +2,7 @@ import requests
 from bs4 import BeautifulSoup
 import json
 from datetime import datetime
-from .util import gen_random_params, clean_html_tags, convert_date_format
+from .util import gen_random_params, clean_html_tags, convert_date_format, gen_mobile_cookies
 import certifi
 
 class BaiduMobile:
@@ -76,10 +76,22 @@ class BaiduMobile:
             't': random_params['timestamp'],
             'r': random_params['r'],
         }
+        
+        # 生成移动端Cookie用于推荐接口，传入random_params确保某些值一致
+        mobile_cookies = gen_mobile_cookies(random_params)
+        
         headers = {
-            'Cookie': f'BAIDUID={random_params["baiduid"]}:FG=1; BAIDUID_BFESS={random_params["baiduid"]}:FG=1;BDUSS={random_params["bduss"]};',
+            'Accept': 'application/json, text/plain, */*',
+            'Accept-Encoding': 'gzip, deflate, br, zstd',
+            'Accept-Language': 'en',
+            'Connection': 'keep-alive',
+            'Cookie': mobile_cookies,
+            'Host': 'm.baidu.com',
+            'Referer': 'https://m.baidu.com/',
             'User-Agent': 'Mozilla/5.0 (Linux; Android 13; SM-G981B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Mobile Safari/537.36 baiduboxapp/13.10.0.10',
-            'Connection': 'close'
+            'sec-ch-ua': '"Not)A;Brand";v="8", "Chromium";v="138", "Google Chrome";v="138"',
+            'sec-ch-ua-mobile': '?1',
+            'sec-ch-ua-platform': '"Android"'
         }
         try:
             with requests.Session() as session:
@@ -113,7 +125,22 @@ class BaiduMobile:
     def get_baidum_serp(self, keyword, date_range, pn, proxies, random_params):
         url = 'https://m.baidu.com/s'
         params = {
-            'word': keyword
+            'word': keyword,
+            'ts': '0',
+            't_kt': '0',
+            'ie': 'utf-8',
+            'rsv_iqid': random_params['rsv_iqid'],
+            'rsv_t': random_params['rsv_t'],
+            'sa': 'ib_d',
+            'rsv_pq': random_params['rsv_iqid'],  # 通常与rsv_iqid相同
+            'rsv_sug4': str(random_params['rsv_sug4']),
+            'tj': '1',
+            'inputT': str(random_params['inputT']),
+            'sugid': random_params['sugid'],
+            'ss': '100',
+            'rqid': random_params['rqid'],
+            'rfrom': '1024439e',
+            'rchannel': '1024439k'
         }
         if date_range:
             start_date, end_date = date_range.split(',')
@@ -122,10 +149,27 @@ class BaiduMobile:
             params['gpc'] = f'stf={start_timestamp},{end_timestamp}|stftype=2'
         if pn:
             params['pn'] = str((int(pn) - 1) * 10)
+            
+        # 生成移动端Cookie，传入random_params确保某些值一致
+        mobile_cookies = gen_mobile_cookies(random_params)
+        
         headers = {
-            'Cookie': f'BAIDUID={random_params["baiduid"]}:FG=1; BAIDUID_BFESS={random_params["baiduid"]}:FG=1;BDUSS={random_params["bduss"]};',
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
+            'Accept-Encoding': 'gzip, deflate, br, zstd',
+            'Accept-Language': 'en',
+            'Cache-Control': 'max-age=0',
+            'Connection': 'keep-alive',
+            'Cookie': mobile_cookies,
+            'Host': 'm.baidu.com',
+            'Sec-Fetch-Dest': 'document',
+            'Sec-Fetch-Mode': 'navigate',
+            'Sec-Fetch-Site': 'none',
+            'Sec-Fetch-User': '?1',
+            'Upgrade-Insecure-Requests': '1',
             'User-Agent': 'Mozilla/5.0 (Linux; Android 13; SM-G981B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Mobile Safari/537.36 baiduboxapp/13.10.0.10',
-            'Connection': 'close'
+            'sec-ch-ua': '"Not)A;Brand";v="8", "Chromium";v="138", "Google Chrome";v="138"',
+            'sec-ch-ua-mobile': '?1',
+            'sec-ch-ua-platform': '"Android"'
         }
         try:
             with requests.Session() as session:
