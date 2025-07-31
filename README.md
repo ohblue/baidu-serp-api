@@ -76,11 +76,34 @@ All parameters are automatically generated and synchronized to ensure realistic 
 - `{'code': 501, 'msg': '百度安全验证'}`: Baidu security verification required.
 - `{'code': 404, 'msg': '未找到相关结果'}`: No relevant results found.
 - `{'code': 405, 'msg': '无搜索结果'}`: No search results.
-- `{'code': 406, 'msg': '无推荐词'}`: No recommended keywords.
-- `{'code': 200, 'msg': 'ok', 'data': {'results': [], 'recommend': [], last_page': True}}`: Successful response. 
+- `{'code': 200, 'msg': 'ok', 'data': {'results': [], 'recommend': [], 'last_page': True}}`: Successful response. 
     - `results` search results list.
-    - `recommend` recommend keywords.
+    - `recommend` basic recommendation keywords (may be empty array).
+    - `ext_recommend` extended recommendation keywords (mobile only, may be empty array).
     - `last_page` indicates whether it's the last page.
+
+## Mobile Extended Recommendations
+
+Mobile version supports two types of recommendations:
+- `recommend`: Basic recommendation keywords extracted directly from search results page
+- `ext_recommend`: Extended recommendation keywords obtained through additional API call
+
+How to get extended recommendations:
+
+```python
+# Get all recommendations (including extended recommendations)
+results = m_serp.search('keyword', exclude=[])
+
+# Get only basic recommendations (default behavior)
+results = m_serp.search('keyword')  # equivalent to exclude=['ext_recommend']
+
+# Get no recommendations
+results = m_serp.search('keyword', exclude=['recommend'])  # automatically excludes ext_recommend
+```
+
+**Notes**:
+- Extended recommendations require an additional network request and are only fetched on the first page (pn=1 or None)
+- Extended recommendations depend on basic recommendations; if basic recommendations are excluded, extended recommendations are automatically excluded as well
 
 ## Disclaimer
 This project is intended for educational purposes only and must not be used for commercial purposes or for large-scale scraping of Baidu data. This project is licensed under the GPLv3 open-source license. If other projects utilize the content of this project, they must be open-sourced and acknowledge the source. Additionally, the author of this project shall not be held responsible for any legal risks resulting from misuse. Violators will bear the consequences at their own risk.

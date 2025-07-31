@@ -74,11 +74,34 @@ results = m_serp.search('关键词', exclude=['recommend', 'last_page', 'match_c
 - `{'code': 501, 'msg': '百度安全验证'}`: 需要进行百度安全验证。
 - `{'code': 404, 'msg': '未找到相关结果'}`: 未找到相关结果。
 - `{'code': 405, 'msg': '无搜索结果'}`: 无搜索结果。
-- `{'code': 406, 'msg': '无推荐词'}`: 无推荐词。
-- `{'code': 200, 'msg': 'ok', 'data': {'results': [], 'last_page': True}}`: 成功响应。
+- `{'code': 200, 'msg': 'ok', 'data': {'results': [], 'recommend': [], 'last_page': True}}`: 成功响应。
     - `results` 搜索结果列表。
-    - `recommend` 推荐相关搜索词。
+    - `recommend` 推荐相关搜索词（可能为空数组）。
+    - `ext_recommend` 扩展推荐词（仅移动端，可能为空数组）。
     - `last_page` 表示是否为最后一页。
+
+## 移动端扩展推荐词
+
+移动端支持两种推荐词：
+- `recommend`: 从搜索结果页面直接提取的基础推荐词
+- `ext_recommend`: 通过额外API调用获取的扩展推荐词
+
+获取扩展推荐词的方式：
+
+```python
+# 获取所有推荐词（包括扩展推荐词）
+results = m_serp.search('关键词', exclude=[])
+
+# 只获取基础推荐词（默认行为）
+results = m_serp.search('关键词')  # 等同于 exclude=['ext_recommend']
+
+# 不获取任何推荐词
+results = m_serp.search('关键词', exclude=['recommend'])  # 自动排除ext_recommend
+```
+
+**注意**：
+- 扩展推荐词需要额外的网络请求，仅在第一页(pn=1或None)时获取
+- 扩展推荐词依赖基础推荐词，如果排除了基础推荐词，扩展推荐词也会被自动排除
 
 ## 免责声明
 

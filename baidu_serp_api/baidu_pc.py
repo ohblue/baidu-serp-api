@@ -170,8 +170,7 @@ class BaiduPc:
                 # if 'wappass.baidu.com/static/captcha' in response.text:
                 #     return {"code": 501, "msg": "百度PC安全验证"}
                 
-                recommend = self.get_recommend(response.text)
-                return response.text, recommend
+                return response.text
         except requests.exceptions.ChunkedEncodingError:
             return {'code': 502, 'msg': '响应提前结束'}
         except requests.exceptions.ReadTimeout:
@@ -215,13 +214,6 @@ class BaiduPc:
             ):
                 return {"code": 405, "msg": "无搜索结果"}
             
-            # 检查是否有推荐词
-            if (
-                not recommend
-                and "site:" not in keyword
-                and not keyword.startswith(("http://", "https://", "www.", "m."))
-            ):
-                return {"code": 406, "msg": "无推荐词"}
 
             data = {
                 "results": search_results,
@@ -242,14 +234,14 @@ class BaiduPc:
 
         random_params = gen_random_params()
 
-        result = self.get_baidupc_serp(
+        html_content = self.get_baidupc_serp(
             keyword.strip(), date_range, pn, proxies, random_params
         )
 
         # 添加错误处理
-        if isinstance(result, dict):
-            return result
+        if isinstance(html_content, dict):
+            return html_content
 
-        html_content, recommend = result
+        recommend = self.get_recommend(html_content)
         
         return self.handle_response(html_content, keyword.strip(), recommend)

@@ -122,7 +122,7 @@ class BaiduMobile:
         except requests.exceptions.RequestException as e:
             return []
 
-    def get_baidum_serp(self, keyword, date_range, pn, proxies, random_params):
+    def get_baidum_serp(self, keyword, date_range, pn, proxies, random_params, need_ext_recommend=False):
         url = 'https://m.baidu.com/s'
         params = {
             'word': keyword,
@@ -187,16 +187,12 @@ class BaiduMobile:
                 # if 'wappass.baidu.com/static/captcha' in response.text:
                 #     return {"code": 501, "msg": "百度M安全验证"}
 
-                recommend = self.get_recommend(response.text)
-                ext_recommend = None
-                
-                if (pn is None or pn == 1) and 'ext_recommend' not in self.exclude:
-                    res_headers = response.headers
-                    qid = res_headers.get('qid', None)
-                    if qid:
-                        ext_recommend = self.get_ext_recommend(keyword, qid, random_params, proxies)
-
-                return response.text, recommend, ext_recommend
+                if need_ext_recommend:
+                    qid = response.headers.get('qid', None)
+                    ext_recommend = self.get_ext_recommend(keyword, qid, random_params, proxies) if qid else None
+                    return response.text, ext_recommend
+                else:
+                    return response.text
             
         except requests.exceptions.ChunkedEncodingError:
             return {'code': 502, 'msg': '响应提前结束'}
@@ -221,6 +217,7 @@ class BaiduMobile:
         except requests.exceptions.RequestException as e:
             return {'code': 500, 'msg': f'请求异常: {str(e)}'}
 
+
     def handle_response(self, response, keyword, recommend, ext_recommend, pn):
         if isinstance(response, str):
             # 检查百度安全验证 - 包括原有逻辑和验证码URL检测
@@ -240,13 +237,6 @@ class BaiduMobile:
             ):
                 return {'code': 405, 'msg': '无搜索结果'}
             
-            # 检查是否有推荐词
-            if (
-                not recommend
-                and 'site:' not in keyword
-                and not keyword.startswith(('http://', 'https://', 'www.', 'm.'))
-            ):
-                return {'code': 406, 'msg': '无推荐词'}
             
             data = {
                 'results': search_results,
@@ -271,12 +261,23 @@ class BaiduMobile:
         if 'recommend' in self.exclude and 'ext_recommend' not in self.exclude:
             self.exclude.append('ext_recommend')
 
-        result = self.get_baidum_serp(keyword.strip(), date_range, pn, proxies, random_params)
-
+        # 判断是否需要获取扩展推荐词
+        need_ext_recommend = (pn is None or pn == 1) and 'ext_recommend' not in self.exclude
+        
+        result = self.get_baidum_serp(keyword.strip(), date_range, pn, proxies, random_params, need_ext_recommend)
+        
         # 添加错误处理
         if isinstance(result, dict):
             return result
         
-        html_content, recommend, ext_recommend = result
+        # 根据返回值类型解包数据
+        if need_ext_recommend:
+            html_content, ext_recommend = result
+        else:
+            html_content = result
+            ext_recommend = None
+        
+        # 获取基础推荐词
+        recommend = self.get_recommend(html_content)
 
         return self.handle_response(html_content, keyword.strip(), recommend, ext_recommend, pn)
