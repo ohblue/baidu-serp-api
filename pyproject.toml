@@ -1,0 +1,89 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "baidu-serp-api"
+version = "1.1.2"
+description = "A library to extract data from Baidu SERP and output it as JSON objects"
+readme = "README.md"
+requires-python = ">=3.6"
+license = {text = "GPL-3.0"}
+authors = [
+    {name = "Ben Chen", email = "chan@live.cn"}
+]
+keywords = ["baidu", "serp", "search", "scraping", "json"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.6",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+    "Operating System :: OS Independent",
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Topic :: Internet :: WWW/HTTP :: Dynamic Content",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Text Processing :: Markup :: HTML",
+]
+dependencies = [
+    "requests",
+    "beautifulsoup4",
+    "loguru",
+    "certifi",
+]
+
+[project.urls]
+Homepage = "https://github.com/ohblue/baidu-serp-api"
+Repository = "https://github.com/ohblue/baidu-serp-api"
+Issues = "https://github.com/ohblue/baidu-serp-api/issues"
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "pytest-cov",
+    "black",
+    "flake8",
+    "mypy",
+]
+
+[tool.uv]
+dev-dependencies = [
+    "pytest>=6.0",
+    "pytest-cov>=2.0",
+]
+
+[tool.setuptools.packages.find]
+include = ["baidu_serp_api*"]
+
+[tool.setuptools.package-data]
+baidu_serp_api = ["py.typed"]
+
+[tool.black]
+line-length = 88
+target-version = ['py36']
+include = '\.pyi?$'
+extend-exclude = '''
+/(
+  # directories
+  \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | build
+  | dist
+)/
+'''
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = "test_*.py"
+python_classes = "Test*"
+python_functions = "test_*"
+addopts = "--verbose --cov=baidu_serp_api --cov-report=term-missing"

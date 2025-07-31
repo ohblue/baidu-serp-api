@@ -6,3 +6,27 @@ venv/
 *.egg-info/
 *.egg
 dist/
+build/
+.eggs/
+
+# uv
+.venv/
+uv.lock
+.python-version.old
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Testing
+.coverage
+.pytest_cache/
+.tox/
+htmlcov/
+
+# MyPy
+.mypy_cache/
+.dmypy.json
+dmypy.json
