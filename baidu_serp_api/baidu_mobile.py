@@ -125,6 +125,16 @@ class BaiduMobile:
                 response = session.get(url, headers=headers, params=params, proxies=proxies, timeout=10, verify=certifi.where())
                 response.raise_for_status()
                 response.encoding = 'utf-8'
+                
+                # # 检查302重定向到验证码页面
+                # if response.status_code == 302:
+                #     location = response.headers.get('Location', '')
+                #     if 'wappass.baidu.com/static/captcha' in location or 'captcha' in response.text:
+                #         return {"code": 501, "msg": "百度M安全验证"}
+                
+                # # 检查响应内容中的验证码链接
+                # if 'wappass.baidu.com/static/captcha' in response.text:
+                #     return {"code": 501, "msg": "百度M安全验证"}
 
                 recommend = self.get_recommend(response.text)
                 ext_recommend = None
@@ -162,16 +172,30 @@ class BaiduMobile:
 
     def handle_response(self, response, keyword, recommend, ext_recommend, pn):
         if isinstance(response, str):
-            if '百度安全验证' in response:
+            # 检查百度安全验证 - 包括原有逻辑和验证码URL检测
+            if ('百度安全验证' in response):
                 return {'code': 501, 'msg': '百度M安全验证'}
             if '未找到相关结果' in response:
                 return {'code': 404, 'msg': '未找到相关结果'}
-            soup = BeautifulSoup(response, 'html.parser')
-            if (not soup.find('p', class_='cu-title') or not recommend) and 'site:' not in keyword and not keyword.startswith(('http://', 'https://', 'www.', 'm.')):
-                return {'code': 403, 'msg': '疑似违禁词或推荐词为空'}
             
-            # 从 extract_baidum_data 获取搜索结果和匹配计数
+            # 提前执行数据提取以便进行准确判断
             search_results, match_count = self.extract_baidum_data(response, keyword, pn)
+            
+            # 检查是否有搜索结果（基于实际提取的数据）
+            if (
+                not search_results
+                and 'site:' not in keyword
+                and not keyword.startswith(('http://', 'https://', 'www.', 'm.'))
+            ):
+                return {'code': 405, 'msg': '无搜索结果'}
+            
+            # 检查是否有推荐词
+            if (
+                not recommend
+                and 'site:' not in keyword
+                and not keyword.startswith(('http://', 'https://', 'www.', 'm.'))
+            ):
+                return {'code': 406, 'msg': '无推荐词'}
             
             data = {
                 'results': search_results,

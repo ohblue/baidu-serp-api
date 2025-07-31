@@ -13,11 +13,12 @@ class BaiduPc:
 
     def extract_baidupc_data(self, html_content, keyword):
         soup = BeautifulSoup(html_content, "html.parser")
-        search_results = soup.select('div[tpl="se_com_default"]')
+        search_results = soup.select('div[tpl="www_index"], div[tpl="www_struct"]')
         result_data = []
         match_count = 0
         for result in search_results:
-            title_element = result.select_one("h3.c-title")
+            # 更新标题选择器 - 直接选择h3元素
+            title_element = result.select_one("h3")
 
             url = result.get("mu")
 
@@ -27,16 +28,19 @@ class BaiduPc:
 
             ranking = result.get("id", 0)
 
-            summary_element = result.select_one('span[class^="content-right_"]')
+            # 更新描述选择器 - 根据实际HTML结构
+            summary_element = result.select_one('span.summary-text_560AW')
             if summary_element:
                 description = clean_html_tags(summary_element.get_text().strip())
 
-            date_time_element = result.select_one("span.c-color-gray2")
+            # 更新日期选择器 - 更精确匹配
+            date_time_element = result.select_one("span.cos-space-mr-3xs.cos-color-text-minor")
             if date_time_element:
                 date_time = date_time_element.get_text().strip()
                 date_time = convert_date_format(date_time)
 
-            source_element = result.select_one("span.c-color-gray")
+            # 更新来源选择器 - 根据实际HTML结构  
+            source_element = result.select_one("span.cosc-source-text")
             if source_element:
                 source = source_element.get_text().strip()
 
@@ -145,11 +149,21 @@ class BaiduPc:
                     params=params,
                     proxies=proxies,
                     timeout=10,
-                    verify=certifi.where(),
-                    allow_redirects=False,
+                    verify=certifi.where()
                 )
                 response.raise_for_status()
                 response.encoding = "utf-8"
+                
+                # # 检查302重定向到验证码页面
+                # if response.status_code == 302:
+                #     location = response.headers.get('Location', '')
+                #     if 'wappass.baidu.com/static/captcha' in location or 'captcha' in response.text:
+                #         return {"code": 501, "msg": "百度PC安全验证"}
+                
+                # # 检查响应内容中的验证码链接
+                # if 'wappass.baidu.com/static/captcha' in response.text:
+                #     return {"code": 501, "msg": "百度PC安全验证"}
+                
                 recommend = self.get_recommend(response.text)
                 return response.text, recommend
         except requests.exceptions.ChunkedEncodingError:
@@ -177,19 +191,31 @@ class BaiduPc:
 
     def handle_response(self, response, keyword, recommend):
         if isinstance(response, str):
-            if "百度安全验证" in response or response.strip() == "":
+            # 检查百度安全验证 - 包括原有逻辑和验证码URL检测
+            if ("百度安全验证" in response or 
+                response.strip() == ""):
                 return {"code": 501, "msg": "百度PC安全验证"}
             if "未找到相关结果" in response:
                 return {"code": 404, "msg": "未找到相关结果"}
+            
+            # 提前执行数据提取以便进行准确判断
+            search_results, match_count = self.extract_baidupc_data(response, keyword)
+            
+            # 检查是否有搜索结果（基于实际提取的数据）
             if (
-                "相关搜索" not in response
+                not search_results
                 and "site:" not in keyword
                 and not keyword.startswith(("http://", "https://", "www.", "m."))
             ):
-                return {"code": 403, "msg": "疑似违禁词或推荐词为空"}
-
-            # 从 extract_baidum_data 获取搜索结果和匹配计数
-            search_results, match_count = self.extract_baidupc_data(response, keyword)
+                return {"code": 405, "msg": "无搜索结果"}
+            
+            # 检查是否有推荐词
+            if (
+                not recommend
+                and "site:" not in keyword
+                and not keyword.startswith(("http://", "https://", "www.", "m."))
+            ):
+                return {"code": 406, "msg": "无推荐词"}
 
             data = {
                 "results": search_results,
