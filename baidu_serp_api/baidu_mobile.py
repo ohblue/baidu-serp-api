@@ -83,7 +83,14 @@ class BaiduMobile:
         }
         try:
             with requests.Session() as session:
-                response = session.get(url, headers=headers, params=params, proxies=proxies, timeout=10, verify=certifi.where())
+                response = session.get(
+                    url,
+                    headers=headers,
+                    params=params,
+                    proxies=proxies,
+                    timeout=10,
+                    verify=certifi.where()
+                )
                 response.raise_for_status()
                 response.encoding = 'utf-8'
                 json_data = response.json()

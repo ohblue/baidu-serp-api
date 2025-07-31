@@ -2,7 +2,7 @@ import requests
 from bs4 import BeautifulSoup
 import json
 from datetime import datetime
-from .util import gen_random_params, clean_html_tags, convert_date_format
+from .util import gen_random_params, clean_html_tags, convert_date_format, gen_pc_cookies
 import re
 import certifi
 
@@ -92,28 +92,14 @@ class BaiduPc:
             "ie": "utf-8",
             "f": "8",
             "rsv_bp": "1",
-            "rsv_idx": "1",
             "tn": "baidu",
-            "fenlei": "256",
-            "rqlang": "cn",
-            "rsv_enter": "1",
-            "rsv_dl": "tb",
-            "rsv_btype": "i",
-            "inputT": "2751",
-            "mod": "1",
-            "isbd": "1",
-            "isid": random_params["isid"],
+            "oq": keyword,  # 原始查询，与wd相同
             "rsv_pq": random_params["rsv_pq"],
             "rsv_t": random_params["rsv_t"],
-            "tfflag": "1",
-            "bs": keyword,
-            "rsv_sid": random_params["rsv_sid"],
-            "_ss": "1",
-            "clist": random_params["clist"],
-            "hsug": "",
-            "f4s": "1",
-            "csor": "20",
-            "_cr1": random_params["_cr1"],
+            "rqlang": "cn",
+            "rsv_dl": "tb",
+            "rsv_enter": "0",  # 浏览器使用0
+            "rsv_btype": "t",  # 浏览器使用t
         }
 
         # 搜索词为site:xxx时, 增加si和ct参数
@@ -134,11 +120,25 @@ class BaiduPc:
             params["pn"] = str((int(pn) - 1) * 10)
 
         # logger.debug(params)
+        # 生成逼真的PC端Cookie
+        pc_cookies = gen_pc_cookies()
+        
         headers = {
-            "cookie": f'BAIDUID={random_params["baiduid"]}:FG=1; BAIDUID_BFESS={random_params["baiduid"]}:FG=1; '
-            f'BDUSS={random_params["bduss"]}; H_PS_645EC={random_params["rsv_t"]}; H_PS_PSSID={random_params["rsv_sid"]}',
-            "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
-            "Connection": "close",
+            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
+            "Accept-Encoding": "gzip, deflate, br, zstd",
+            "Accept-Language": "en-US,en;q=0.9,zh-CN;q=0.8,zh;q=0.7",
+            "Connection": "keep-alive",
+            "Cookie": pc_cookies,
+            "Host": "www.baidu.com",
+            "Sec-Fetch-Dest": "document",
+            "Sec-Fetch-Mode": "navigate", 
+            "Sec-Fetch-Site": "none",
+            "Sec-Fetch-User": "?1",
+            "Upgrade-Insecure-Requests": "1",
+            "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36",
+            "sec-ch-ua": '"Not)A;Brand";v="8", "Chromium";v="138", "Google Chrome";v="138"',
+            "sec-ch-ua-mobile": "?0",
+            "sec-ch-ua-platform": '"macOS"',
         }
 
         try:
@@ -152,7 +152,13 @@ class BaiduPc:
                     verify=certifi.where()
                 )
                 response.raise_for_status()
-                response.encoding = "utf-8"
+                
+                # 确保正确的编码处理
+                # 由于已安装brotli，requests会自动处理br压缩
+                if response.encoding is None or response.encoding == 'ISO-8859-1':
+                    response.encoding = 'utf-8'
+                elif response.apparent_encoding:
+                    response.encoding = response.apparent_encoding
                 
                 # # 检查302重定向到验证码页面
                 # if response.status_code == 302:
