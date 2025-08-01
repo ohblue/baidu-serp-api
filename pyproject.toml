@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "baidu-serp-api"
-version = "1.1.6"
+version = "1.1.7"
 description = "A library to extract data from Baidu SERP and output it as JSON objects"
 readme = "README.md"
 requires-python = ">=3.12"

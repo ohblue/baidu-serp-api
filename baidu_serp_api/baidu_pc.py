@@ -11,14 +11,30 @@ import time
 
 class BaiduPc:
 
-    def __init__(self, connect_timeout=5, read_timeout=10, max_retries=0, pool_connections=10, pool_maxsize=10, keep_alive=False):
+    def __init__(self, connect_timeout=5, read_timeout=10, max_retries=0, pool_connections=1, pool_maxsize=1, keep_alive=False, connection_mode='single'):
         self.exclude = []
         self.connect_timeout = connect_timeout
         self.read_timeout = read_timeout 
         self.max_retries = max_retries
-        self.pool_connections = pool_connections
-        self.pool_maxsize = pool_maxsize
-        self.keep_alive = keep_alive
+        self.connection_mode = connection_mode
+        
+        # 根据连接模式设置参数
+        if connection_mode == 'single':
+            # 单连接模式：适合代理轮换，避免连接复用问题
+            self.pool_connections = 1
+            self.pool_maxsize = 1  
+            self.keep_alive = False
+        elif connection_mode == 'pooled':
+            # 连接池模式：适合固定代理或高性能场景
+            self.pool_connections = 10
+            self.pool_maxsize = 20
+            self.keep_alive = True
+        else:  # 'custom'
+            # 自定义模式：使用用户提供的参数
+            self.pool_connections = pool_connections
+            self.pool_maxsize = pool_maxsize
+            self.keep_alive = keep_alive
+            
         self._session = None
         self._setup_session()
     
@@ -195,8 +211,14 @@ class BaiduPc:
         try:
             start_time = time.time()
             
+            # 智能连接管理：根据代理使用情况自动调整
+            should_close_connection = not self.keep_alive
+            if proxies and self.connection_mode != 'custom':
+                # 使用代理时强制关闭连接，避免代理轮换时的连接复用问题
+                should_close_connection = True
+            
             # 动态设置Connection头
-            if not self.keep_alive:
+            if should_close_connection:
                 headers["Connection"] = "close"
             else:
                 headers.pop("Connection", None)
